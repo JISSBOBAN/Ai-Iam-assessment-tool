@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/db
+      - ./questions.csv:/mnt/data/questions.csv
+    environment:
+      - DATABASE_URL=sqlite:///./db/questions.db
+      - CSV_PATH=/mnt/data/questions.csv
