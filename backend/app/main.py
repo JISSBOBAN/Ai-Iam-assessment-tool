@@ -50,7 +50,7 @@ def get_question(question_id: str, db: Session = Depends(db.get_db)):
 @app.post("/submit", response_model=schemas.SubmissionOut)
 def submit_answers(submission: schemas.SubmissionIn, db: Session = Depends(db.get_db)):
     # Validate question_ids
-    all_questions = crud.get_questions(db)
+    all_questions = crud.get_questions(db, limit=10000)
     valid_qids = {q.question_id for q in all_questions}
     
     for ans in submission.answers:
