@@ -7,14 +7,14 @@ def seed_questions(db):
     q1 = models.Question(
         question_id="Q-001",
         question_text="Do you have MFA?",
-        standards={"ISO_27001_2022": "A.9.4.1"},
+        iso_27001_2022="A.9.4.1",
         answer_type="yes_no_na",
         meta={}
     )
     q2 = models.Question(
         question_id="Q-002",
         question_text="Is data encrypted?",
-        standards={"ISO_27001_2022": "A.10.1.1"},
+        iso_27001_2022="A.10.1.1",
         answer_type="yes_no_na",
         meta={}
     )
@@ -42,15 +42,11 @@ def test_submit_answers(client, seed_questions):
     data = response.json()
     
     assert "submission_id" in data
-    assert data["summary"]["ISO_27001_2022"]["status"] == "partial"
-    # Wait, logic:
-    # if no_count > 0 -> non_compliant
-    # else if na_count > 0 and yes_count == (total - na) -> partial
-    # else if yes_count == total -> compliant
+    assert data["summary"]["iso_27001_2022"]["status"] == "partial"
     
     # Here: total=2, yes=1, na=1. yes == 2-1 (1). So "partial".
     
-    assert data["summary"]["ISO_27001_2022"]["status"] == "partial"
+    assert data["summary"]["iso_27001_2022"]["status"] == "partial"
     assert data["report_html"] is not None
 
 def test_submit_invalid_question(client, seed_questions):

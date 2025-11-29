@@ -62,45 +62,10 @@ def submit_answers(submission: schemas.SubmissionIn, db: Session = Depends(db.ge
     # Compute summary
     summary = reports.compute_summary(submission.answers, all_questions)
     
-    # Generate HTML report
-    # We need to pass the submission object, but it's not created yet.
-    # We can create a temporary object or just pass the data.
-    # The report generator expects a Submission model object for client_id etc.
-    # Let's create the DB object first.
-    
-    # But wait, report_html is stored in the DB. So we need to generate it before saving?
-    # Or save without it, generate, then update?
-    # Or just construct a dummy object for the template.
-    
-    # Let's construct a dummy object for rendering
-    import datetime
-    dummy_submission = models.Submission(
-        submission_id="temp", # Placeholder
-        client_id=submission.client_id,
-        created_at=datetime.datetime.now(),
-        answers=[a.model_dump() for a in submission.answers]
-    )
-    
-    report_html = reports.generate_html_report(dummy_submission, summary, all_questions)
-    
-    # Now save to DB
-    db_submission = crud.create_submission(db, submission, summary, report_html)
-    
-    # Update the report with the real ID? 
-    # The report has {{ submission.submission_id }}. 
-    # If we want the real ID in the report, we should generate it after getting the ID.
-    # But create_submission generates the ID.
-    # So:
-    # 1. Create submission with empty report.
-    # 2. Generate report with real ID.
-    # 3. Update submission with report.
-    
-    # Let's do that.
-    # Refactor crud.create_submission to allow updating or just do it here.
-    # Or just generate UUID beforehand.
-    
-    # Let's generate UUID beforehand in python
+    # Generate UUID beforehand to include in report
     new_id = models.generate_uuid()
+    
+    # Create submission object
     db_submission = models.Submission(
         submission_id=new_id,
         client_id=submission.client_id,
@@ -109,10 +74,11 @@ def submit_answers(submission: schemas.SubmissionIn, db: Session = Depends(db.ge
         report_html="" # Placeholder
     )
     
-    # Now generate report
+    # Generate HTML report
     report_html = reports.generate_html_report(db_submission, summary, all_questions)
     db_submission.report_html = report_html
     
+    # Save to DB
     db.add(db_submission)
     db.commit()
     db.refresh(db_submission)

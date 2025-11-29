@@ -11,12 +11,19 @@ class Question(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     question_id = Column(String, unique=True, index=True)
+    section_id = Column(String)
     question_text = Column(Text)
     iam_domain = Column(String)
-    sub_domain = Column(String)
-    answer_type = Column(String, default="yes_no_na")
+    answer_type = Column(String, default="yes_no_partial_with_text")
+    question_type = Column(String)
+    iso_27001_2022 = Column(String)
+    nist_800_53_rev5 = Column(String)
+    soc_2_tsc = Column(String)
+    gdpr = Column(String)
+    pci_dss_4_0 = Column(String)
+    hipaa = Column(String)
+    cis_controls = Column(String)
     notes = Column(Text)
-    standards = Column(JSON)
     meta = Column(JSON)
 
 class Submission(Base):

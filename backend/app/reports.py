@@ -3,8 +3,8 @@ from jinja2 import Template
 from . import schemas, models
 
 STANDARD_COLS = [
-    "ISO_27001_2022", "NIST_800_53_Rev5", "SOC_2_TSC", 
-    "GDPR", "PCI_DSS_4_0", "HIPAA", "CIS_Controls"
+    "iso_27001_2022", "nist_800_53_rev5", "soc_2_tsc", 
+    "gdpr", "pci_dss_4_0", "hipaa", "cis_controls"
 ]
 
 def compute_summary(answers: List[schemas.AnswerIn], questions: List[models.Question]) -> Dict[str, Any]:
@@ -25,7 +25,8 @@ def compute_summary(answers: List[schemas.AnswerIn], questions: List[models.Ques
         na_notes = []
         
         # Find questions relevant to this standard
-        relevant_questions = [q for q in questions if q.standards and std in q.standards]
+        # Check if the standard column has a value (not None and not empty string)
+        relevant_questions = [q for q in questions if getattr(q, std) and getattr(q, std).strip()]
         
         total_questions = len(relevant_questions)
         
@@ -182,25 +183,23 @@ def generate_html_report(submission: models.Submission, summary: Dict[str, Any],
     question_map = {q.question_id: q for q in questions}
     details = []
     
-    # We want to list all questions or just answered ones? 
-    # Requirement: "Per-question table: question_id, question_text, mapped standards, user answer, notes"
-    # Usually better to show all questions or at least the ones in the submission.
-    # Let's show all questions to be comprehensive, or just the ones answered.
-    # Given it's a report for a submission, let's iterate through the answers provided.
-    # BUT, if we want to show what was missed, we might want all questions.
-    # Let's stick to questions that exist in the DB, and map answers to them.
-    
-    # Actually, let's iterate over all questions in the DB to show complete status.
-    
     # Create a map of answers
     answers_map = {a['question_id']: a for a in submission.answers}
     
     for q in questions:
         ans = answers_map.get(q.question_id)
+        
+        # Collect relevant standards for this question
+        q_standards = []
+        for std in STANDARD_COLS:
+            val = getattr(q, std)
+            if val and val.strip():
+                q_standards.append(f"{std}: {val}")
+        
         details.append({
             "question_id": q.question_id,
             "question_text": q.question_text,
-            "standards": ", ".join(q.standards.keys()) if q.standards else "",
+            "standards": ", ".join(q_standards),
             "answer": ans['answer'] if ans else "-",
             "notes": ans['notes'] if ans and ans.get('notes') else ""
         })

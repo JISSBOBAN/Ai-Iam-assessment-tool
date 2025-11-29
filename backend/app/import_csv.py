@@ -10,8 +10,8 @@ def import_questions_from_csv(db: Session, csv_path: str = settings.CSV_PATH):
     
     # Standards columns mapping
     STANDARD_COLS = [
-        "ISO_27001_2022", "NIST_800_53_Rev5", "SOC_2_TSC", 
-        "GDPR", "PCI_DSS_4_0", "HIPAA", "CIS_Controls"
+        "iso_27001_2022", "nist_800_53_rev5", "soc_2_tsc", 
+        "gdpr", "pci_dss_4_0", "hipaa", "cis_controls"
     ]
 
     with open(csv_path, mode='r', encoding='utf-8-sig') as f:
@@ -19,34 +19,25 @@ def import_questions_from_csv(db: Session, csv_path: str = settings.CSV_PATH):
         
         for row in reader:
             # Extract basic fields
-            question_id = row.get("Question_ID")
+            question_id = row.get("question_id")
             if not question_id:
                 continue # Skip empty rows
                 
-            question_text = row.get("Question", "")
-            iam_domain = row.get("IAM_Domain", "")
-            sub_domain = row.get("Sub_Domain", "")
-            answer_type = row.get("Answer_Type", "")
-            if not answer_type:
-                answer_type = "yes_no_na"
-            notes = row.get("Notes", "")
-            
-            # Extract standards
-            standards = {}
-            for std in STANDARD_COLS:
-                val = row.get(std, "").strip()
-                if val:
-                    standards[std] = val
-            
-            # Prepare data
             question_data = {
                 "question_id": question_id,
-                "question_text": question_text,
-                "iam_domain": iam_domain,
-                "sub_domain": sub_domain,
-                "answer_type": answer_type,
-                "notes": notes,
-                "standards": standards,
+                "section_id": row.get("section_id", ""),
+                "question_text": row.get("question_text", ""),
+                "iam_domain": row.get("iam_domain", ""),
+                "answer_type": row.get("answer_type", "yes_no_partial_with_text"),
+                "question_type": row.get("question_type", ""),
+                "iso_27001_2022": row.get("iso_27001_2022", ""),
+                "nist_800_53_rev5": row.get("nist_800_53_rev5", ""),
+                "soc_2_tsc": row.get("soc_2_tsc", ""),
+                "gdpr": row.get("gdpr", ""),
+                "pci_dss_4_0": row.get("pci_dss_4_0", ""),
+                "hipaa": row.get("hipaa", ""),
+                "cis_controls": row.get("cis_controls", ""),
+                "notes": row.get("notes", ""),
                 "meta": row # Store full row
             }
             
@@ -60,7 +51,8 @@ def import_questions_from_csv(db: Session, csv_path: str = settings.CSV_PATH):
     return {"inserted": inserted_count, "updated": updated_count}
 
 if __name__ == "__main__":
-    from .db import SessionLocal
+    from .db import SessionLocal, engine
+    models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         stats = import_questions_from_csv(db)
